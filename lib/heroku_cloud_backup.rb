@@ -1,40 +1,54 @@
 require 'fog'
-
+require 'open-uri'
+require "heroku"
+require "pgbackups/client"
 require 'heroku_cloud_backup/errors'
 require 'heroku_cloud_backup/railtie'
 require 'heroku_cloud_backup/version'
 
 module HerokuCloudBackup
   class << self
-    def create_backup
-      @name = "#{ENV['APP_NAME']}-#{Time.now.strftime('%Y-%m-%d-%H%M%S')}.sql"
 
-      db = ENV['DATABASE_URL'].match(/postgres:\/\/([^:]+):([^@]+)@([^\/]+)\/(.+)/)
-      if db[3] =~ /amazonaws.com$/
-        system "mysqldump --username=#{db[1]} --password=#{db[2]} --host=#{db[3]} --single-transaction #{db[4]} > tmp/#{@name}"
+    def log(message)
+      puts "[#{Time.now}] #{message}"
+    end
+    
+    def backups_url
+      ENV["PGBACKUPS_URL"]
+    end
+    
+    def client
+      @client ||= PGBackups::Client.new(ENV["PGBACKUPS_URL"])
+    end
+    
+    def databases
+      if db = ENV["HEROKU_BACKUP_DATABASES"]
+        db.split(",").map(&:strip)
       else
-        system "PGPASSWORD=#{db[2]} pg_dump -Fc -i --username=#{db[1]} --host=#{db[3]} #{db[4]} > tmp/#{@name}"
+        ["DATABASE_URL"]
       end
-
-      puts "gzipping sql file..."
-      `gzip tmp/#{@name}`
-      @backup_filename = "#{@name}.gz"
-      @backup_file = "tmp/#{@backup_filename}"
+    end
+    
+    def backup_name(to_url)
+      # translate s3://bucket/email/foo/bar.dump => foo/bar
+      parts = to_url.split('/')
+      parts.slice(4..-1).join('/').gsub(/\.dump$/, '')
     end
 
-    def run
-      puts "[#{Time.now}] heroku:backup started"
-      create_backup
+    def execute
+      log "heroku:backup started"
 
-      @bucket_name = ENV['hcb_bucket'] || "#{ENV['APP_NAME']}-heroku-backups"
-      @backup_path = ENV['hcb_prefix'] || "db"
-      @providers = ENV['hcb_providers'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'hcb_providers' config variable."))
+      @bucket_name = ENV['HCB_BUCKET'] || "#{ENV['APP_NAME']}-heroku-backups"
+      @backup_path = ENV['HCB_PREFIX'] || "db"
+      @providers = ENV['HCB_PROVIDERS'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_PROVIDERS' config variable."))
+      b = client.get_latest_backup
+      raise HerokuCloudBackup::Errors::NoBackups.new("You don't have any pgbackups. Please run heroku pgbackups:capture first.") if b.empty?
 
       @providers.split(',').each do |provider|
         case provider
           when 'aws'
-            @hcb_aws_access_key_id = ENV['hcb_aws_access_key_id'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'hcb_aws_access_key_id' config variable."))
-            @hcb_aws_secret_access_key = ENV['hcb_aws_secret_access_key'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'hcb_aws_secret_access_key' config variable."))
+            @hcb_aws_access_key_id = ENV['HCB_AWS_ACCESS_KEY_ID'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_AWS_ACCESS_KEY_ID' config variable."))
+            @hcb_aws_secret_access_key = ENV['HCB_AWS_SECRET_ACCESS_KEY'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_AWS_SECRET_ACCESS_KEY' config variable."))
             begin
               @connection = Fog::Storage.new(
                 :provider => 'AWS',
@@ -54,20 +68,26 @@ module HerokuCloudBackup
           directory = @connection.directories.create(:key => @bucket_name)
         end
 
-        directory.files.create(:key => "#{@backup_path}/#{@backup_filename}", :body => open(@backup_file))
+        public_url = b["public_url"]
+        created_at = DateTime.parse b["created_at"]
+        db_name = b["from_name"]
+        name = "#{ENV['APP_NAME']}-#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
+        begin
+          directory.files.create(:key => "#{@backup_path}/#{b["from_name"]}/#{name}", :body => open(public_url))
+        rescue Exception => e
+          raise HerokuCloudBackup::Errors::UploadError.new(e.message)
+        end
       end
-
-      system "rm #{@backup_file}" if @backup_file
 
       prune
 
-      puts "[#{Time.now}] heroku:backup complete"
+      log "heroku:backup complete"
     end
 
     private
 
     def prune
-      number_of_files = ENV['hcb_max_backups']
+      number_of_files = ENV['HCB_MAX_BACKUPS']
       if number_of_files && number_of_files.to_i > 0
         directory = @connection.directories.get(@bucket_name)
         files = directory.files.all(:prefix => @backup_path)
