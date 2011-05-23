@@ -12,15 +12,15 @@ module HerokuCloudBackup
     def log(message)
       puts "[#{Time.now}] #{message}"
     end
-    
+
     def backups_url
       ENV["PGBACKUPS_URL"]
     end
-    
+
     def client
       @client ||= PGBackups::Client.new(ENV["PGBACKUPS_URL"])
     end
-    
+
     def databases
       if db = ENV["HEROKU_BACKUP_DATABASES"]
         db.split(",").map(&:strip)
@@ -28,7 +28,7 @@ module HerokuCloudBackup
         ["DATABASE_URL"]
       end
     end
-    
+
     def backup_name(to_url)
       # translate s3://bucket/email/foo/bar.dump => foo/bar
       parts = to_url.split('/')
