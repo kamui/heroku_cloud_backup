@@ -14,7 +14,7 @@ If you want this to run daily, you'll need to enable the Heroku cron addon:
 
     heroku addons:add cron:daily
 
-For Rails 3.0 and later, add this to your Gemfile:
+For Rails 3 and later, add this to your Gemfile:
 
     gem 'heroku_backup_task'
     gem 'heroku_cloud_backup'
@@ -37,9 +37,9 @@ In your Rakefile:
 
 The first thing you'll want to do is configure the addon.
 
-HCB_PROVIDERS (aws, rackspace, google) - Add which providers you're using. Accepts a comma delimited value with each provider so you can store backups in more than 1 provider. **Required**
+HCB_PROVIDER (aws, rackspace, google) - Add which provider you're using. **Required**
 
-    heroku config:add HCB_PROVIDERS='aws' # or 'aws, google, rackspace'
+    heroku config:add HCB_PROVIDER='aws' # or 'google' or 'rackspace'
 
 HCB_BUCKET (Defaults to "[APP NAME]-heroku-backups") - Select a bucket name to upload to. This the bucket or root directory that your files will be stored in. If the bucket doesn't exist, it will be created. **Optional**
 
@@ -49,16 +49,26 @@ HCB_PREFIX (Defaults to "db") - The direction prefix for where the backups are s
 
     heroku config:add HCB_PREFIX='backups/pg'
 
-HCB_MAX_BACKUPS (Defaults to no limit) - The number of backups to store before the script will prune out older backups. A value of 10 will allow you to store 10 of the most recent backups. Newer backups will replace older ones. **Optional**
+HCB_MAX (Defaults to no limit) - The number of backups to store before the script will prune out older backups. A value of 10 will allow you to store 10 of the most recent backups. Newer backups will replace older ones. **Optional**
 
-    heroku config:add HCB_MAX_BACKUPS=10
+    heroku config:add HCB_MAX=10
 
-Depending on which providers you specify, you'll need to provide login credentials.
+Depending on which provider you specify, you'll need to provide different login credentials.
 
-Currently, only Amazon Web Services is supported.
+For Amazon:
 
-    heroku config:add HCB_AWS_ACCESS_KEY_ID="your_access_key"
-    heroku config:add HCB_AWS_SECRET_ACCESS_KEY="your_secret"
+    heroku config:add HCB_KEY1="aws_access_key_id"
+    heroku config:add HCB_KEY2="aws_secret_access_key"
+
+For Rackspace:
+
+    heroku config:add HCB_KEY1="rackspace_username"
+    heroku config:add HCB_KEY2="rackspace_api_key"
+
+For Google Storage:
+
+    heroku config:add HCB_KEY1="google_storage_secret_access_key"
+    heroku config:add HCB_KEY2="google_storage_access_key_id"
 
 You can run this manually like this:
 

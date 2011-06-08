@@ -40,43 +40,54 @@ module HerokuCloudBackup
 
       @bucket_name = ENV['HCB_BUCKET'] || "#{ENV['APP_NAME']}-heroku-backups"
       @backup_path = ENV['HCB_PREFIX'] || "db"
-      @providers = ENV['HCB_PROVIDERS'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_PROVIDERS' config variable."))
+      @provider = ENV['HCB_PROVIDER'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_PROVIDER' config variable."))
+      @key1 = ENV['HCB_KEY1'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_KEY1' config variable."))
+      @key2 = ENV['HCB_KEY2'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_KEY2' config variable."))
+
       b = client.get_latest_backup
       raise HerokuCloudBackup::Errors::NoBackups.new("You don't have any pgbackups. Please run heroku pgbackups:capture first.") if b.empty?
 
-      @providers.split(',').each do |provider|
-        case provider
+      begin
+        case @provider
           when 'aws'
-            @hcb_aws_access_key_id = ENV['HCB_AWS_ACCESS_KEY_ID'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_AWS_ACCESS_KEY_ID' config variable."))
-            @hcb_aws_secret_access_key = ENV['HCB_AWS_SECRET_ACCESS_KEY'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_AWS_SECRET_ACCESS_KEY' config variable."))
-            begin
-              @connection = Fog::Storage.new(
-                :provider => 'AWS',
-                :aws_access_key_id => @hcb_aws_access_key_id,
-                :aws_secret_access_key => @hcb_aws_secret_access_key
-              )
-            rescue
-              raise HerokuCloudBackup::Errors::ConnectionError.new("There was an error connecting to your provider.")
-            end
+            @connection = Fog::Storage.new(
+              :provider => 'AWS',
+              :aws_access_key_id     => @key1,
+              :aws_secret_access_key => @key2
+            )
+          when 'rackspace'
+            connection = Fog::Storage.new(
+              :provider => 'Rackspace',
+              :rackspace_username => @key1,
+              :rackspace_api_key  => @key2
+            )
+          when 'google'
+            connection = Fog::Storage.new(
+              :provider => 'Google',
+              :google_storage_secret_access_key => @key1,
+              :google_storage_access_key_id     => @key2
+            )
         else
-          raise HerokuCloudBackup::Errors::InvalidProvider.new("One or more of your providers were invalid. Valid values are 'aws', 'rackspace', or 'google'")
+          raise HerokuCloudBackup::Errors::InvalidProvider.new("Your provider was invalid. Valid values are 'aws', 'rackspace', or 'google'")
         end
+      rescue
+        raise HerokuCloudBackup::Errors::ConnectionError.new("There was an error connecting to your provider.")
+      end
 
-        directory = @connection.directories.get(@bucket_name)
+      directory = @connection.directories.get(@bucket_name)
 
-        if !directory
-          directory = @connection.directories.create(:key => @bucket_name)
-        end
+      if !directory
+        directory = @connection.directories.create(:key => @bucket_name)
+      end
 
-        public_url = b["public_url"]
-        created_at = DateTime.parse b["created_at"]
-        db_name = b["from_name"]
-        name = "#{ENV['APP_NAME']}-#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
-        begin
-          directory.files.create(:key => "#{@backup_path}/#{b["from_name"]}/#{name}", :body => open(public_url))
-        rescue Exception => e
-          raise HerokuCloudBackup::Errors::UploadError.new(e.message)
-        end
+      public_url = b["public_url"]
+      created_at = DateTime.parse b["created_at"]
+      db_name = b["from_name"]
+      name = "#{ENV['APP_NAME']}-#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
+      begin
+        directory.files.create(:key => "#{@backup_path}/#{b["from_name"]}/#{name}", :body => open(public_url))
+      rescue Exception => e
+        raise HerokuCloudBackup::Errors::UploadError.new(e.message)
       end
 
       prune
@@ -87,7 +98,7 @@ module HerokuCloudBackup
     private
 
     def prune
-      number_of_files = ENV['HCB_MAX_BACKUPS']
+      number_of_files = ENV['HCB_MAX']
       if number_of_files && number_of_files.to_i > 0
         directory = @connection.directories.get(@bucket_name)
         files = directory.files.all(:prefix => @backup_path)
