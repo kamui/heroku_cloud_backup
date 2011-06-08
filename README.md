@@ -41,7 +41,7 @@ HCB_PROVIDER (aws, rackspace, google) - Add which provider you're using. **Requi
 
     heroku config:add HCB_PROVIDER='aws' # or 'google' or 'rackspace'
 
-HCB_BUCKET (Defaults to "[APP NAME]-heroku-backups") - Select a bucket name to upload to. This the bucket or root directory that your files will be stored in. If the bucket doesn't exist, it will be created. **Optional**
+HCB_BUCKET (Defaults to "[APP NAME]-backups") - Select a bucket name to upload to. This the bucket or root directory that your files will be stored in. If the bucket doesn't exist, it will be created. **Optional**
 
     heroku config:add HCB_BUCKET='mywebsite'
 

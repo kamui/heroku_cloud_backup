@@ -38,7 +38,7 @@ module HerokuCloudBackup
     def execute
       log "heroku:backup started"
 
-      @bucket_name = ENV['HCB_BUCKET'] || "#{ENV['APP_NAME']}-heroku-backups"
+      @bucket_name = ENV['HCB_BUCKET'] || "#{ENV['APP_NAME']}-backups"
       @backup_path = ENV['HCB_PREFIX'] || "db"
       @provider = ENV['HCB_PROVIDER'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_PROVIDER' config variable."))
       @key1 = ENV['HCB_KEY1'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_KEY1' config variable."))
@@ -74,7 +74,7 @@ module HerokuCloudBackup
         raise HerokuCloudBackup::Errors::ConnectionError.new("There was an error connecting to your provider.")
       end
 
-      directory = @connection.directories.get(@bucket_name)
+      directory = @connection.directories.get(@bucket_name) rescue Excon::Errors::Forbidden nil
 
       if !directory
         directory = @connection.directories.create(:key => @bucket_name)
