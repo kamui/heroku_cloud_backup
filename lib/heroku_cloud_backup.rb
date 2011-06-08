@@ -38,7 +38,7 @@ module HerokuCloudBackup
     def execute
       log "heroku:backup started"
 
-      @bucket_name = ENV['HCB_BUCKET'] || "#{ENV['APP_NAME']}-backups"
+      @bucket_name = ENV['HCB_BUCKET'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_BUCKET' config variable."))
       @backup_path = ENV['HCB_PREFIX'] || "db"
       @provider = ENV['HCB_PROVIDER'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_PROVIDER' config variable."))
       @key1 = ENV['HCB_KEY1'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_KEY1' config variable."))
