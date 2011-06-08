@@ -74,7 +74,11 @@ module HerokuCloudBackup
         raise HerokuCloudBackup::Errors::ConnectionError.new("There was an error connecting to your provider.")
       end
 
-      directory = @connection.directories.get(@bucket_name) rescue Excon::Errors::Forbidden nil
+      begin
+        directory = @connection.directories.get(@bucket_name)
+      rescue Excon::Errors::Forbidden
+        raise HerokuCloudBackup::Errors::Forbidden.new("You do not have access to this bucket name. It's possible this bucket name is already owned by another user. Please check your credentials (access keys) or select a different bucket name.")
+      end
 
       if !directory
         directory = @connection.directories.create(:key => @bucket_name)
