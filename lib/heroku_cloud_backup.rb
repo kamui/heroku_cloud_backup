@@ -83,7 +83,7 @@ module HerokuCloudBackup
       public_url = b["public_url"]
       created_at = DateTime.parse b["created_at"]
       db_name = b["from_name"]
-      name = "#{ENV['APP_NAME']}-#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
+      name = "#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
       begin
         directory.files.create(:key => "#{@backup_path}/#{b["from_name"]}/#{name}", :body => open(public_url))
       rescue Exception => e
@@ -104,7 +104,7 @@ module HerokuCloudBackup
         files = directory.files.all(:prefix => @backup_path)
         file_count = 0
         files.reverse.each do |file|
-          if file.key =~ Regexp.new("/#{@backup_path}\/#{ENV['APP_NAME']}-\d{4}-\d{2}-\d{2}-\d{6}\.sql\.gz$/i")
+          if file.key =~ Regexp.new("/#{@backup_path}\/\d{4}-\d{2}-\d{2}-\d{6}\.sql\.gz$/i")
             file_count += 1
           else
             next
