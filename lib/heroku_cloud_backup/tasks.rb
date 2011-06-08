@@ -1,7 +1,7 @@
 require 'heroku_cloud_backup'
 
 namespace :heroku do
-  desc "Example showing PostgreSQL database backups from Heroku to Amazon S3"
+  desc "Transfer PostgreSQL database backups from Heroku to the cloud"
   task :cloud_backup => :environment do
     HerokuCloudBackup.execute
   end

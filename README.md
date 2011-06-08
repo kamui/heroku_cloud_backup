@@ -30,7 +30,7 @@ In your Rakefile:
     require "heroku_cloud_backup"
     task :cron do
       HerokuBackupTask.execute
-      HerokuCloudBackupTask.execute
+      HerokuCloudBackup.execute
     end
 
 ## Usage
