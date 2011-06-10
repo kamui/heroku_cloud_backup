@@ -75,6 +75,12 @@ You can run this manually like this:
     heroku rake heroku_backup
     heroku rake heroku:cloud_backup
 
+## Restoring a backup
+
+I would recommend you create a temporarily public url from your cloud storage. I do this with Cyberduck. It has a neat feature where you can right click on a file and it'll generate temporarily accessible urls to that file, with the auth params for it. So once you have that url you can store like this:
+
+    heroku pgbackups:restore 'http://my-bucket-name.s3.amazonaws.com/db/DATABASE_URL/2011-06-09-014500.dump?authparameters'
+
 ## Note on Patches/Pull Requests
 
 * Fork the project.
