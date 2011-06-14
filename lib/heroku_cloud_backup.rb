@@ -56,13 +56,13 @@ module HerokuCloudBackup
               :aws_secret_access_key => @key2
             )
           when 'rackspace'
-            connection = Fog::Storage.new(
+            @connection = Fog::Storage.new(
               :provider => 'Rackspace',
               :rackspace_username => @key1,
               :rackspace_api_key  => @key2
             )
           when 'google'
-            connection = Fog::Storage.new(
+            @connection = Fog::Storage.new(
               :provider => 'Google',
               :google_storage_secret_access_key => @key1,
               :google_storage_access_key_id     => @key2
