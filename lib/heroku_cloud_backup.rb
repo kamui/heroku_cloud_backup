@@ -89,6 +89,7 @@ module HerokuCloudBackup
       db_name = b["from_name"]
       name = "#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
       begin
+        log "creating #{@backup_path}/#{b["from_name"]}/#{name}"
         directory.files.create(:key => "#{@backup_path}/#{b["from_name"]}/#{name}", :body => open(public_url))
       rescue Exception => e
         raise HerokuCloudBackup::Errors::UploadError.new(e.message)
