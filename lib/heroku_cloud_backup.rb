@@ -44,9 +44,8 @@ module HerokuCloudBackup
       @key1 = ENV['HCB_KEY1'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_KEY1' config variable."))
       @key2 = ENV['HCB_KEY2'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_KEY2' config variable."))
 
-      log client.get_backups.inspect
-      b = client.get_latest_backup
-      raise HerokuCloudBackup::Errors::NoBackups.new("You don't have any pgbackups. Please run heroku pgbackups:capture first.") if b.empty?
+      b = client.get_backups.last
+      raise HerokuCloudBackup::Errors::NoBackups.new("You don't have any pgbackups. Please run heroku pgbackups:capture first.") unless b
 
       begin
         case @provider
