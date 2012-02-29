@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'heroku_cloud_backup'
 
 module HerokuCloudBackup
