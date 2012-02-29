@@ -1,5 +1,7 @@
 # Heroku Cloud Backup
 
+[![Build Status](https://secure.travis-ci.org/kamui/heroku_cloud_backup.png)](http://travis-ci.org/kamui/heroku_cloud_backup)
+
 The `heroku_cloud_backup` gem adds a rake task to your project that will take backups stored with Heroku's [PGBackup addon](http://devcenter.heroku.com/articles/pgbackups) and upload them to the cloud.
 
 ## Installation
