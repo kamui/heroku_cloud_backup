@@ -93,4 +93,4 @@ I would recommend you create a temporarily public url from your cloud storage. I
 
 ### Copyright
 
-Copyright (c) 2011 Jack Chu. See LICENSE for details.
+Copyright (c) 2011-2012 Jack Chu. See LICENSE for details.
