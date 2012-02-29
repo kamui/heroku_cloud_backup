@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Jack Chu"]
   s.email       = ["jack@jackchu.com"]
-  s.homepage    = "http://jackchu.com/automated-heroku-database-backups-to-s3"
+  s.homepage    = "http://jackchu.com/blog/2011/06/10/automated-heroku-database-backups-to-amazon-s3/"
   s.summary     = %q{Backup pg dumps to the cloud}
   s.description = %q{PG backups into the cloud with fog}
 
