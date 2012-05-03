@@ -13,7 +13,7 @@ module HerokuCloudBackup
     def execute
       log "heroku:backup started"
 
-      b = client.get_backups.last
+      b = last_backup
       raise HerokuCloudBackup::Errors::NoBackups.new("You don't have any pgbackups. Please run heroku pgbackups:capture first.") if b.empty?
 
       begin
@@ -40,6 +40,10 @@ module HerokuCloudBackup
       prune
 
       log "heroku:backup complete"
+    end
+
+    def last_backup
+      client.get_backups.sort{|snap1, snap2| Time.parse(snap1['created_at']) <=> Time.parse(snap2['created_at']) }.last
     end
 
     def connection=(connection)
