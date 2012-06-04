@@ -118,12 +118,13 @@ module HerokuCloudBackup
         files = directory.files.all(:prefix => backup_path)
         file_count = 0
         files.reverse.each do |file|
-          if file.key =~ Regexp.new("/#{backup_path}\/\d{4}-\d{2}-\d{2}-\d{6}\.sql\.gz$/i")
+          if file.key =~ /#{backup_path}.*\/\d{4}-\d{2}-\d{2}-\d{6}.dump$/i
             file_count += 1
           else
             next
           end
-          if file_count > number_of_files
+          if file_count > number_of_files.to_i
+            puts "prune destroying file #{file.key}"
             file.destroy
           end
         end
