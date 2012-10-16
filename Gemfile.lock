@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    heroku_cloud_backup (0.1.0)
+    heroku_cloud_backup (0.1.1)
       fog (>= 1.6.0)
       heroku (>= 2.32.14)
 
