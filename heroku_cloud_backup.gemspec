@@ -20,8 +20,8 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_runtime_dependency 'fog', '>= 0.7.2'
-  s.add_runtime_dependency 'heroku', '>= 2.1.4'
+  s.add_runtime_dependency 'fog', '>= 1.6.0'
+  s.add_runtime_dependency 'heroku', '>= 2.32.14'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'minitest'
 end
