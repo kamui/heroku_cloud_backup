@@ -3,7 +3,7 @@
 require 'fog'
 require 'open-uri'
 require "heroku"
-require "pgbackups/client"
+require "heroku/client/pgbackups"
 require 'heroku_cloud_backup/errors'
 require 'heroku_cloud_backup/railtie'
 require 'heroku_cloud_backup/version'
@@ -75,7 +75,7 @@ module HerokuCloudBackup
     end
 
     def client
-      @client ||= PGBackups::Client.new(backups_url)
+      @client ||= ::Heroku::Client::Pgbackups.new(backups_url)
     end
 
     private
