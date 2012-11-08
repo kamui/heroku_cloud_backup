@@ -17,7 +17,7 @@ describe HerokuCloudBackup do
   context ".client" do
     it "should return an instance of PGBackups::Client" do
       ENV['PGBACKUPS_URL'] = "http://example.com"
-      HerokuCloudBackup.client.must_be_instance_of PGBackups::Client
+      HerokuCloudBackup.client.must_be_instance_of Heroku::Client::Pgbackups
     end
   end
 
