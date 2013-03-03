@@ -1,3 +1,7 @@
+## 0.1.2
+* Remove Gemfile.lock
+* Add ruby 2.0.0 to travis-ci
+
 ## 0.1.1
 * Fix issue #6, `cannot load such file -- pgbackups/client`
 
