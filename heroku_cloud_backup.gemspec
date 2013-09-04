@@ -12,6 +12,7 @@ Gem::Specification.new do |s|
   s.homepage    = "http://jackchu.com/blog/2011/06/10/automated-heroku-database-backups-to-amazon-s3/"
   s.summary     = %q{Backup pg dumps to the cloud}
   s.description = %q{PG backups into the cloud with fog}
+  s.license       = "MIT"
 
   s.rubyforge_project = "heroku_cloud_backup"
 
