@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Heroku cloud backup by kamui</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Heroku cloud backup</h1>
+        <p>Uploads heroku pgbackups into the cloud using fog.</p>
+
+        <p class="view"><a href="https://github.com/kamui/heroku_cloud_backup">View the Project on GitHub <small>kamui/heroku_cloud_backup</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/kamui/heroku_cloud_backup/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/kamui/heroku_cloud_backup/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/kamui/heroku_cloud_backup">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="heroku-cloud-backup" class="anchor" href="#heroku-cloud-backup"><span class="octicon octicon-link"></span></a>Heroku Cloud Backup</h1>
+
+<p><a href="http://travis-ci.org/kamui/heroku_cloud_backup"><img src="https://secure.travis-ci.org/kamui/heroku_cloud_backup.png" alt="Build Status"></a></p>
+
+<p>The <code>heroku_cloud_backup</code> gem adds a rake task to your project that will take backups stored with Heroku's <a href="http://devcenter.heroku.com/articles/pgbackups">PGBackup addon</a> and upload them to the cloud.</p>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>It's recommended that you use this gem in conjunction with the <a href="https://github.com/joemsak/heroku_backup_task">heroku_backup_task</a> gem. heroku_backup_task adds a rake tasks that will create a fresh database capture and expire the oldest backup if you're at your  capture limit.</p>
+
+<p>First, you need to enable the Heroku PGBackups addon:</p>
+
+<pre><code>heroku addons:add pgbackups:basic
+</code></pre>
+
+<p>If you want this to run daily, you'll need to enable the Heroku cron addon:</p>
+
+<pre><code>heroku addons:add cron:daily
+</code></pre>
+
+<p>For Rails 3 and later, add this to your Gemfile:</p>
+
+<pre><code>gem 'heroku_backup_task'
+gem 'heroku_cloud_backup'
+</code></pre>
+
+<p>For Rails 2.1 and later, add this to your in your environment.rb:</p>
+
+<pre><code>config.gem 'heroku_backup_task'
+config.gem 'heroku_cloud_backup'
+</code></pre>
+
+<p>In your Rakefile:</p>
+
+<pre><code>require "heroku_backup_task"
+require "heroku_cloud_backup"
+task :cron do
+  HerokuBackupTask.execute
+  HerokuCloudBackup.execute
+end
+</code></pre>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>The first thing you'll want to do is configure the addon.</p>
+
+<p>HCB_PROVIDER (aws, rackspace, google) - Add which provider you're using. <strong>Required</strong></p>
+
+<pre><code>heroku config:add HCB_PROVIDER='aws' # or 'google' or 'rackspace'
+</code></pre>
+
+<p>HCB_BUCKET (alphanumberic characters, dashes, period, underscore are allowed, between 3 and 255 characters long) - Select a bucket name to upload to. This the bucket or root directory that your files will be stored in. If the bucket doesn't exist, it will be created. <strong>Required</strong></p>
+
+<pre><code>heroku config:add HCB_BUCKET='mywebsite'
+</code></pre>
+
+<p>HCB_PREFIX (Defaults to "db") - The direction prefix for where the backups are stored. This is so you can store your backups within a specific sub directory within the bucket. heroku_cloud_backup will also append the ENV var of the database to the path, so you can backup multiple databases, by their ENV names. <strong>Optional</strong></p>
+
+<pre><code>heroku config:add HCB_PREFIX='backups/pg'
+</code></pre>
+
+<p>HCB_MAX (Defaults to no limit) - The number of backups to store before the script will prune out older backups. A value of 10 will allow you to store 10 of the most recent backups. Newer backups will replace older ones. <strong>Optional</strong></p>
+
+<pre><code>heroku config:add HCB_MAX=10
+</code></pre>
+
+<p>Depending on which provider you specify, you'll need to provide different login credentials.</p>
+
+<p>For Amazon:</p>
+
+<pre><code>heroku config:add HCB_KEY1="aws_access_key_id"
+heroku config:add HCB_KEY2="aws_secret_access_key"
+</code></pre>
+
+<p>For Rackspace:</p>
+
+<pre><code>heroku config:add HCB_KEY1="rackspace_username"
+heroku config:add HCB_KEY2="rackspace_api_key"
+</code></pre>
+
+<p>For Google Storage:</p>
+
+<pre><code>heroku config:add HCB_KEY1="google_storage_secret_access_key"
+heroku config:add HCB_KEY2="google_storage_access_key_id"
+</code></pre>
+
+<p>You can run this manually like this:</p>
+
+<pre><code>heroku rake heroku_backup
+heroku rake heroku:cloud_backup
+</code></pre>
+
+<h2>
+<a name="restoring-a-backup" class="anchor" href="#restoring-a-backup"><span class="octicon octicon-link"></span></a>Restoring a backup</h2>
+
+<p>I would recommend you create a temporarily public url from your cloud storage. I do this with Cyberduck. It has a neat feature where you can right click on a file and it'll generate temporarily accessible urls to that file, with the auth params for it. So once you have that url you can store like this:</p>
+
+<pre><code>heroku pgbackups:restore 'http://my-bucket-name.s3.amazonaws.com/db/DATABASE_URL/2011-06-09-014500.dump?authparameters'
+</code></pre>
+
+<h2>
+<a name="note-on-patchespull-requests" class="anchor" href="#note-on-patchespull-requests"><span class="octicon octicon-link"></span></a>Note on Patches/Pull Requests</h2>
+
+<ul>
+<li>Fork the project.</li>
+<li>Make your feature addition or bug fix.</li>
+<li>Add tests for it. This is important so I don't break it in a
+future version unintentionally.</li>
+<li>Commit, do not mess with rakefile, version, or history.
+(if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)</li>
+<li>Send me a pull request. Bonus points for topic branches.</li>
+</ul><h3>
+<a name="copyright" class="anchor" href="#copyright"><span class="octicon octicon-link"></span></a>Copyright</h3>
+
+<p>Copyright (c) 2011-2013 Jack Chu. See LICENSE for details.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/kamui">kamui</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-18119942-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
