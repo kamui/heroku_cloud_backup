@@ -61,11 +61,13 @@ For Amazon:
 
     heroku config:add HCB_KEY1="aws_access_key_id"
     heroku config:add HCB_KEY2="aws_secret_access_key"
+    heroku config:add HCB_REGION="us-east-1"
 
 For Rackspace:
 
     heroku config:add HCB_KEY1="rackspace_username"
     heroku config:add HCB_KEY2="rackspace_api_key"
+    heroku config:add HCB_REGION="dfw"
 
 For Google Storage:
 

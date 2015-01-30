@@ -55,19 +55,21 @@ module HerokuCloudBackup
             Fog::Storage.new(
               provider: 'AWS',
               aws_access_key_id: key1,
-              aws_secret_access_key: key2
+              aws_secret_access_key: key2,
+              region: region,
             )
           when 'rackspace'
             Fog::Storage.new(
               provider: 'Rackspace',
               rackspace_username: key1,
-              rackspace_api_key: key2
+              rackspace_api_key: key2,
+              rackspace_region: region.to_sym,
             )
           when 'google'
             Fog::Storage.new(
               provider: 'Google',
               google_storage_secret_access_key: key1,
-              google_storage_access_key_id: key2
+              google_storage_access_key_id: key2,
             )
           else
             raise "Your provider was invalid. Valid values are 'aws', 'rackspace', or 'google'"
@@ -104,6 +106,10 @@ module HerokuCloudBackup
 
     def key2
       ENV['HCB_KEY2'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_KEY2' config variable."))
+    end
+
+    def region
+      ENV['HCB_REGION'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_REGION' config variable."))
     end
 
     def log(message)
