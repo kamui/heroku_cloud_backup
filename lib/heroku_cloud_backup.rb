@@ -23,7 +23,7 @@ module HerokuCloudBackup
       end
 
       if !directory
-        directory = connection.directories.create(:key => bucket_name)
+        directory = connection.directories.create(key: bucket_name)
       end
 
       public_url = b["public_url"]
@@ -32,7 +32,7 @@ module HerokuCloudBackup
       name = "#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
       begin
         log "creating #{@backup_path}/#{b["from_name"]}/#{name}"
-        directory.files.create(:key => "#{backup_path}/#{b["from_name"]}/#{name}", :body => open(public_url))
+        directory.files.create(key: "#{backup_path}/#{b["from_name"]}/#{name}", body: open(public_url))
       rescue Exception => e
         raise HerokuCloudBackup::Errors::UploadError.new(e.message)
       end
@@ -52,20 +52,23 @@ module HerokuCloudBackup
         begin
           case provider
           when 'aws'
-            Fog::Storage.new(:provider => 'AWS',
-                             :aws_access_key_id     => key1,
-                             :aws_secret_access_key => key2
-                             )
+            Fog::Storage.new(
+              provider: 'AWS',
+              aws_access_key_id: key1,
+              aws_secret_access_key: key2
+            )
           when 'rackspace'
-            Fog::Storage.new(:provider => 'Rackspace',
-                             :rackspace_username => key1,
-                             :rackspace_api_key  => key2
-                             )
+            Fog::Storage.new(
+              provider: 'Rackspace',
+              rackspace_username: key1,
+              rackspace_api_key: key2
+            )
           when 'google'
-            Fog::Storage.new(:provider => 'Google',
-                             :google_storage_secret_access_key => key1,
-                             :google_storage_access_key_id     => key2
-                             )
+            Fog::Storage.new(
+              provider: 'Google',
+              google_storage_secret_access_key: key1,
+              google_storage_access_key_id: key2
+            )
           else
             raise "Your provider was invalid. Valid values are 'aws', 'rackspace', or 'google'"
           end
@@ -111,7 +114,7 @@ module HerokuCloudBackup
       number_of_files = ENV['HCB_MAX']
       if number_of_files && number_of_files.to_i > 0
         directory = connection.directories.get(bucket_name)
-        files = directory.files.all(:prefix => backup_path)
+        files = directory.files.all(prefix: backup_path)
         file_count = 0
         files.reverse.each do |file|
           if file.key =~ Regexp.new("/#{backup_path}\/\d{4}-\d{2}-\d{2}-\d{6}\.sql\.gz$/i")
