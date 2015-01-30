@@ -55,6 +55,10 @@ HCB_MAX (Defaults to no limit) - The number of backups to store before the scrip
 
     heroku config:add HCB_MAX=10
 
+HCB_REGION (AWS defaults 'us-east-1', Rackspace defaults to :dfw) - The region of the provider. **Optional**
+
+    heroku config:add HCB_REGION=us-west-1
+
 Depending on which provider you specify, you'll need to provide different login credentials.
 
 For Amazon:
