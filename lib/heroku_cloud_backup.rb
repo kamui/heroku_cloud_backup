@@ -13,7 +13,7 @@ module HerokuCloudBackup
     def execute
       log "heroku:backup started"
 
-      b = client.get_backups.last
+      b = last_backup
       raise HerokuCloudBackup::Errors::NoBackups.new("You don't have any pgbackups. Please run heroku pgbackups:capture first.") if b.empty?
 
       begin
@@ -40,6 +40,10 @@ module HerokuCloudBackup
       prune
 
       log "heroku:backup complete"
+    end
+
+    def last_backup
+      client.get_backups.sort{|snap1, snap2| Time.parse(snap1['created_at']) <=> Time.parse(snap2['created_at']) }.last
     end
 
     def connection=(connection)
@@ -131,12 +135,13 @@ module HerokuCloudBackup
         files = directory.files.all(prefix: backup_path)
         file_count = 0
         files.reverse.each do |file|
-          if file.key =~ Regexp.new("/#{backup_path}\/\d{4}-\d{2}-\d{2}-\d{6}\.sql\.gz$/i")
+          if file.key =~ /#{backup_path}.*\/\d{4}-\d{2}-\d{2}-\d{6}.dump$/i
             file_count += 1
           else
             next
           end
-          if file_count > number_of_files
+          if file_count > number_of_files.to_i
+            puts "prune destroying file #{file.key}"
             file.destroy
           end
         end
