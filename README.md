@@ -88,17 +88,3 @@ You can run this manually like this:
 I would recommend you create a temporarily public url from your cloud storage. I do this with Cyberduck. It has a neat feature where you can right click on a file and it'll generate temporarily accessible urls to that file, with the auth params for it. So once you have that url you can store like this:
 
     heroku pgbackups:restore 'http://my-bucket-name.s3.amazonaws.com/db/DATABASE_URL/2011-06-09-014500.dump?authparameters'
-
-## Note on Patches/Pull Requests
-
-* Fork the project.
-* Make your feature addition or bug fix.
-* Add tests for it. This is important so I don't break it in a
-  future version unintentionally.
-* Commit, do not mess with rakefile, version, or history.
-  (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
-* Send me a pull request. Bonus points for topic branches.
-
-### Copyright
-
-Copyright (c) 2011-2013 Jack Chu. See LICENSE for details.
