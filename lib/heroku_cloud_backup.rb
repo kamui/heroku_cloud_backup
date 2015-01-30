@@ -109,7 +109,15 @@ module HerokuCloudBackup
     end
 
     def region
-      ENV['HCB_REGION'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_REGION' config variable."))
+      region =  case provider
+                when 'aws'
+                  'us-east-1'
+                when 'rackspace'
+                  'dfw'
+                else
+                  nil
+                end
+      ENV['HCB_REGION'] || region
     end
 
     def log(message)

@@ -37,15 +37,6 @@ describe HerokuCloudBackup do
           HerokuCloudBackup.connection
         end
 
-        before do
-          case provider
-          when 'aws'
-            ENV['HCB_REGION'] = 'us-east-1'
-          when 'rackspace'
-            ENV['HCB_REGION'] = 'dfw'
-          end
-        end
-
         it "should return a valid storage object if provider is #{provider}" do
           connection.wont_be_nil
         end
