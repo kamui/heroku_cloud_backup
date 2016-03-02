@@ -1,37 +1,9 @@
 # Heroku Cloud Backup
 
-[![Build Status](https://secure.travis-ci.org/kamui/heroku_cloud_backup.png)](http://travis-ci.org/kamui/heroku_cloud_backup)
-
-The `heroku_cloud_backup` gem adds a rake task to your project that will take backups stored with Heroku's [PGBackup addon](http://devcenter.heroku.com/articles/pgbackups) and upload them to the cloud.
-
 ## Installation
 
-It's recommended that you use this gem in conjunction with the [heroku_backup_task](https://github.com/joemsak/heroku_backup_task) gem. heroku_backup_task adds a rake tasks that will create a fresh database capture and expire the oldest backup if you're at your  capture limit.
-
-First, you need to enable the Heroku PGBackups addon:
-
-    heroku addons:add pgbackups:basic
-
-If you want this to run daily, you'll need to enable the Heroku cron addon:
-
-    heroku addons:add cron:daily
-
-For Rails 3 and later, add this to your Gemfile:
-
-    gem 'heroku_backup_task'
-    gem 'heroku_cloud_backup'
-
-For Rails 2.1 and later, add this to your in your environment.rb:
-
-    config.gem 'heroku_backup_task'
-    config.gem 'heroku_cloud_backup'
-
-In your Rakefile:
-
-    require "heroku_backup_task"
     require "heroku_cloud_backup"
-    task :cron do
-      HerokuBackupTask.execute
+    task :backup do
       HerokuCloudBackup.execute
     end
 
@@ -83,8 +55,10 @@ You can run this manually like this:
     heroku rake heroku_backup
     heroku rake heroku:cloud_backup
 
-## Restoring a backup
+HCB_APP_NAME
 
-I would recommend you create a temporarily public url from your cloud storage. I do this with Cyberduck. It has a neat feature where you can right click on a file and it'll generate temporarily accessible urls to that file, with the auth params for it. So once you have that url you can store like this:
+  heroku config:add HCB_APP_NAME=<heroku_app_name>
 
-    heroku pgbackups:restore 'http://my-bucket-name.s3.amazonaws.com/db/DATABASE_URL/2011-06-09-014500.dump?authparameters'
+HEROKU_API_KEY
+
+  heroku config:add HEROKU_API_KEY=<heroku_api_key>
