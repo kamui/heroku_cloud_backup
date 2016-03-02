@@ -91,7 +91,7 @@ module HerokuCloudBackup
     end
 
     def backup_path
-      ENV['HCB_PREFIX'] || "db"
+      ENV['HCB_APP_NAME'] || "db"
     end
 
     def provider
