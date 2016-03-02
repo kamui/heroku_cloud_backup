@@ -6,6 +6,7 @@ require "heroku"
 require "heroku/client"
 require "heroku/client/heroku_postgresql"
 require "heroku/client/heroku_postgresql_backups"
+require "heroku/jsplugin"
 require 'heroku_cloud_backup/errors'
 require 'heroku_cloud_backup/railtie'
 require 'heroku_cloud_backup/version'
