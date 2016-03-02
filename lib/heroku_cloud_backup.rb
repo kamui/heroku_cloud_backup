@@ -16,7 +16,10 @@ module HerokuCloudBackup
     def execute
       log "heroku:backup started"
 
-      backup = client.transfers.first
+      backup = client.
+        transfers.
+        reject{|transfer| transfer[:to_type] == "pg_restore" }.
+        first
 
       begin
         directory = connection.directories.get(bucket_name)
