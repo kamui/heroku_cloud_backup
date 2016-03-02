@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_runtime_dependency 'fog', '>= 1.6.0'
-  s.add_runtime_dependency 'heroku', '>= 2.32.14'
+  s.add_runtime_dependency 'heroku', '>= 3.42.38'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'minitest'
 end

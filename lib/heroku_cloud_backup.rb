@@ -3,7 +3,9 @@
 require 'fog'
 require 'open-uri'
 require "heroku"
-require "heroku/client/pgbackups"
+require "heroku/client"
+require "heroku/client/heroku_postgresql"
+require "heroku/client/heroku_postgresql_backups"
 require 'heroku_cloud_backup/errors'
 require 'heroku_cloud_backup/railtie'
 require 'heroku_cloud_backup/version'
@@ -13,8 +15,7 @@ module HerokuCloudBackup
     def execute
       log "heroku:backup started"
 
-      b = client.get_backups.last
-      raise HerokuCloudBackup::Errors::NoBackups.new("You don't have any pgbackups. Please run heroku pgbackups:capture first.") if b.empty?
+      backup = client.transfers.first
 
       begin
         directory = connection.directories.get(bucket_name)
@@ -26,13 +27,13 @@ module HerokuCloudBackup
         directory = connection.directories.create(key: bucket_name)
       end
 
-      public_url = b["public_url"]
-      created_at = DateTime.parse b["created_at"]
-      db_name = b["from_name"]
+      public_url = client.transfers_public_url(backup[:uuid])[:url]
+      created_at = DateTime.parse backup[:created_at]
+      db_name = backup[:from_name]
       name = "#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
       begin
-        log "creating #{@backup_path}/#{b["from_name"]}/#{name}"
-        directory.files.create(key: "#{backup_path}/#{b["from_name"]}/#{name}", body: open(public_url))
+        log "creating #{@backup_path}/#{db_name}/#{name}"
+        directory.files.create(key: "#{backup_path}/#{db_name}/#{name}", body: open(public_url))
       rescue Exception => e
         raise HerokuCloudBackup::Errors::UploadError.new(e.message)
       end
@@ -80,13 +81,10 @@ module HerokuCloudBackup
     end
 
     def client
-      @client ||= ::Heroku::Client::Pgbackups.new(backups_url)
+      @client ||= Heroku::Client::HerokuPostgresqlApp.new(ENV["HCB_APP_NAME"])
     end
 
     private
-    def backups_url
-      ENV["PGBACKUPS_URL"] || raise(HerokuCloudBackup::Errors::NotFound.new("'PGBACKUPS_URL' environment variable not found."))
-    end
 
     def bucket_name
       ENV['HCB_BUCKET'] || raise(HerokuCloudBackup::Errors::NotFound.new("Please provide a 'HCB_BUCKET' config variable."))
