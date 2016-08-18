@@ -47,9 +47,11 @@ describe HerokuCloudBackup do
       end
     end
 
-    it "should raise HerokuCloudBackup::Errors::ConnectionError exception if provider is invalid" do
+    it "should raise HerokuCloudBackup::Errors::ConnectionError exception if "\
+      "provider is invalid" do
       ENV['HCB_PROVIDER'] = "notsupported"
-      lambda { HerokuCloudBackup.connection }.must_raise HerokuCloudBackup::Errors::ConnectionError
+      lambda { HerokuCloudBackup.connection }.
+        must_raise HerokuCloudBackup::Errors::ConnectionError
     end
   end
 end
