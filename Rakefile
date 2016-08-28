@@ -4,7 +4,7 @@ require 'bundler'
 Bundler::GemHelper.install_tasks
 
 require 'rake/testtask'
-task :default => :test
+task default: :test
 
 desc "Run tests"
 task :test do
