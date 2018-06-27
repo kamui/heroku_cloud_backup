@@ -1,3 +1,11 @@
+## 0.3.0
+* Repurpose for exclusive use with AWS S3
+* Replace dependency on fog with aws-sdk-s3
+* Remove support for travis-ci
+* Remove tests and test dependencies
+* Support netrc 0.11 and rest-client 2.0
+* Remove `prune` method
+
 ## 0.2.0
 * Remove dependency on deprecated heroku gem
 

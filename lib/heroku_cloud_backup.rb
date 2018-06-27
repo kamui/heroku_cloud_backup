@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require 'fog'
+require 'aws-sdk-s3'
 require 'heroku_cloud_backup/auth'
 require 'heroku_cloud_backup/env'
 require 'heroku_cloud_backup/errors'
@@ -16,11 +16,11 @@ module HerokuCloudBackup
 
       backup = client.
         transfers.
-        reject{|transfer| transfer[:to_type] == "pg_restore" }.
+        reject{ |transfer| transfer[:to_type] == "pg_restore" }.
         first
 
       begin
-        directory = connection.directories.get(bucket_name)
+        directory = connection.bucket(bucket_name)
       rescue Excon::Errors::Forbidden
         raise HerokuCloudBackup::Errors::Forbidden.new(
           "You do not have access to this bucket name. It's possible this "\
@@ -30,7 +30,7 @@ module HerokuCloudBackup
       end
 
       if !directory
-        directory = connection.directories.create(key: bucket_name)
+        directory = connection.create_bucket(bucket_name)
       end
 
       public_url = client.transfers_public_url(backup[:uuid])[:url]
@@ -39,17 +39,13 @@ module HerokuCloudBackup
       name = "#{created_at.strftime('%Y-%m-%d-%H%M%S')}.dump"
       begin
         log "creating #{backup_path}/#{db_name}/#{name}"
-        directory.
-          files.
-          create(
-            key: "#{backup_path}/#{db_name}/#{name}",
-            body: open(public_url)
-          )
+        directory.put_object(
+          key: "#{backup_path}/#{db_name}/#{name}",
+          body: open(public_url)
+        )
       rescue Exception => e
         raise HerokuCloudBackup::Errors::UploadError.new(e.message)
       end
-
-      prune
 
       log "heroku:backup complete"
     end
@@ -62,111 +58,76 @@ module HerokuCloudBackup
       return @connection if @connection
       self.connection =
         begin
-          case provider
-          when 'aws'
-            Fog::Storage.new(
-              provider: 'AWS',
-              aws_access_key_id: key1,
-              aws_secret_access_key: key2,
-              region: region,
-            )
-          when 'rackspace'
-            Fog::Storage.new(
-              provider: 'Rackspace',
-              rackspace_username: key1,
-              rackspace_api_key: key2,
-              rackspace_region: region.to_sym,
-            )
-          when 'google'
-            Fog::Storage.new(
-              provider: 'Google',
-              google_storage_secret_access_key: key1,
-              google_storage_access_key_id: key2,
-            )
-          else
-            raise "Your provider was invalid. Valid values are 'aws', "\
-              "'rackspace', or 'google'"
-          end
+          Aws::S3::Resource.new(
+            access_key_id: key1,
+            secret_access_key: key2,
+            region: region
+          )
         rescue => error
           raise HerokuCloudBackup::Errors::ConnectionError.new(
-            "There was an error connecting to your provider. #{error}"
+            "There was an error connecting to AWS. #{error}"
           )
         end
     end
 
     def client
-      @client ||= HerokuCloudBackup::PGApp.new(ENV["HCB_APP_NAME"])
+      begin
+        @client ||= HerokuCloudBackup::PGApp.new(ENV["HCB_APP_NAME"])
+      rescue Exception => e
+        raise HerokuCloudBackup::Errors::NotFound.new(
+          "Please provide a 'HCB_APP_NAME' config variable."
+        )
+      end
     end
 
     private
 
     def bucket_name
-      ENV['HCB_BUCKET'] ||
-        raise(HerokuCloudBackup::Errors::NotFound.new(
-          "Please provide a 'HCB_BUCKET' config variable.")
+      begin
+        ENV['HCB_BUCKET']
+      rescue Exception => e
+        raise HerokuCloudBackup::Errors::NotFound.new(
+          "Please provide a 'HCB_BUCKET' config variable."
         )
+      end
     end
 
     def backup_path
-      ENV['HCB_APP_NAME'] || "db"
-    end
-
-    def provider
-      ENV['HCB_PROVIDER'] ||
-        raise(HerokuCloudBackup::Errors::NotFound.new(
-          "Please provide a 'HCB_PROVIDER' config variable.")
+      begin
+        ENV['HCB_APP_NAME']
+      rescue Exception => e
+        raise HerokuCloudBackup::Errors::NotFound.new(
+          "Please provide a 'HCB_APP_NAME' config variable."
         )
+      end
     end
 
     def key1
-      ENV['HCB_KEY1'] ||
-        raise(HerokuCloudBackup::Errors::NotFound.new(
-          "Please provide a 'HCB_KEY1' config variable.")
+      begin
+        ENV['HCB_KEY1']
+      rescue Exception => e
+        raise HerokuCloudBackup::Errors::NotFound.new(
+          "Please provide a 'HCB_KEY1' config variable."
         )
+      end
     end
 
     def key2
-      ENV['HCB_KEY2'] ||
-        raise(HerokuCloudBackup::Errors::NotFound.new(
-          "Please provide a 'HCB_KEY2' config variable.")
+      begin
+        ENV['HCB_KEY2']
+      rescue Exception => e
+        raise HerokuCloudBackup::Errors::NotFound.new(
+          "Please provide a 'HCB_KEY2' config variable."
         )
+      end
     end
 
     def region
-      region =  case provider
-                when 'aws'
-                  'us-east-1'
-                when 'rackspace'
-                  'dfw'
-                else
-                  nil
-                end
-      ENV['HCB_REGION'] || region
+      ENV['HCB_REGION'] || 'us-east-1'
     end
 
     def log(message)
       puts "[#{Time.now}] #{message}"
-    end
-
-    def prune
-      number_of_files = ENV['HCB_MAX']
-      if number_of_files && number_of_files.to_i > 0
-        directory = connection.directories.get(bucket_name)
-        files = directory.files.all(prefix: backup_path)
-        file_count = 0
-        files.reverse.each do |file|
-          if file.key =~ Regexp.new(
-            "/#{backup_path}\/\d{4}-\d{2}-\d{2}-\d{6}\.sql\.gz$/i"
-          )
-            file_count += 1
-          else
-            next
-          end
-          if file_count > number_of_files
-            file.destroy
-          end
-        end
-      end
     end
   end
 end
