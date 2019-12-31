@@ -1,3 +1,6 @@
+## 0.3.1
+* Remove method `rubyforge_project=`, deprecated without replacement
+
 ## 0.3.0
 * Repurpose for exclusive use with AWS S3
 * Replace dependency on fog with aws-sdk-s3

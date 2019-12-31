@@ -18,8 +18,6 @@ Gem::Specification.new do |s|
   s.description = %q{PG backups AWS S3 with aws-sdk-s3}
   s.license     = "MIT"
 
-  s.rubyforge_project = "heroku_cloud_backup"
-
   s.files         = `git ls-files`.split("\n")
   s.executables   = `git ls-files -- bin/*`.
                       split("\n").
